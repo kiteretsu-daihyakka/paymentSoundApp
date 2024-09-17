@@ -14,26 +14,13 @@ import {
   DeviceEventEmitter,
 } from 'react-native';
 import Tts from 'react-native-tts';
-import BackgroundFetch from 'react-native-background-fetch';
+import BackgroundService from 'react-native-background-actions';
 
 // import SmsAndroid from 'react-native-get-sms-android';
 // import SmsListener from 'react-native-android-sms-listener';
 
 function App(): React.JSX.Element {
   const [receiveSmsPermission, setReceiveSmsPermission] = useState('');
-
-  BackgroundFetch.configure(
-    {
-      minimumFetchInterval: 0, // minimum interval in minutes
-      stopOnTerminate: false, // continue running after the app is terminated
-      startOnBoot: true, // start when the device boots up
-    },
-    async taskId => {
-      readAmountReceivedMessage();
-      console.log(`Background task with ID ${taskId} executed`);
-      BackgroundFetch.finish(taskId); // signal task completion
-    },
-  );
 
   const requestSmsPermission = async () => {
     try {
@@ -45,14 +32,14 @@ function App(): React.JSX.Element {
       console.log(err);
     }
   };
-  const readAmountReceivedMessage = () => {
+  const readAmountReceivedMessage = async () => {
     if (receiveSmsPermission === PermissionsAndroid.RESULTS.GRANTED) {
-      // Tts.setDefaultVoice('hi-in-x-hie-local'); // male // Tts.setDefaultVoice('hi-in-x-hia-local'); // slow female
+      Tts.setDefaultVoice('hi-in-x-hie-local'); // male // Tts.setDefaultVoice('hi-in-x-hia-local'); // slow female
       let subscriber = DeviceEventEmitter.addListener(
         'onSMSReceived',
         message => {
           const {messageBody} = JSON.parse(message);
-          if (!messageBody.toLowerCase().includes('NAVNIRMAN')) {
+          if (!messageBody.toLowerCase().includes('navnirman')) {
             return;
           }
           Tts.getInitStatus().then(() => {
@@ -72,16 +59,31 @@ function App(): React.JSX.Element {
         subscriber.remove();
       };
     }
-  }
+  };
+  const options = {
+    taskName: 'Example',
+    taskTitle: 'ExampleTask title',
+    taskDesc: 'ExampleTask description',
+    taskIcon: {
+      name: 'ic_launcher',
+      type: 'mipmap',
+    },
+    color: '#ff00ff',
+    linkingURI: 'yourSchemeHere://chat/jane', // See Deep Linking for more info
+    parameters: {
+      delay: 1000,
+    },
+  };
   useEffect(() => {
     requestSmsPermission();
     Tts.setDucking(true);
     Tts.setDefaultLanguage('hin-IN');
-    BackgroundFetch.start(); // Start the background task
+    // Start the background task
   }, []);
 
   useEffect(() => {
-    readAmountReceivedMessage();
+    console.log('coming in use effect.')
+    BackgroundService.start(readAmountReceivedMessage,options);
   }, [receiveSmsPermission]);
 
   return (
