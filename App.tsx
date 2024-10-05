@@ -20,8 +20,32 @@ import BackgroundService from 'react-native-background-actions';
 // import SmsListener from 'react-native-android-sms-listener';
 
 function App(): React.JSX.Element {
-  const [receiveSmsPermission, setReceiveSmsPermission] = useState('');
+  const sleep = time =>
+    new Promise(resolve => setTimeout(() => resolve(), time));
+  const veryIntensiveTask = async taskDataArguments => {
+    const {delay} = taskDataArguments;
+    await new Promise(async resolve => {
+      for (let i = 0; BackgroundService.isRunning(); i++) {
 
+        await sleep(delay);
+      }
+    });
+  };
+  const options = {
+    taskName: 'Example',
+    taskTitle: 'ExampleTask title',
+    taskDesc: 'ExampleTask description',
+    taskIcon: {
+      name: 'ic_launcher',
+      type: 'mipmap',
+    },
+    color: '#ff00ff',
+    linkingURI: 'yourSchemeHere://chat/j\ane', // See Deep Linking for more info
+    parameters: {
+      delay: 1000,
+    },
+  };
+  const [receiveSmsPermission, setReceiveSmsPermission] = useState('');
   const requestSmsPermission = async () => {
     try {
       const permission = await PermissionsAndroid.request(
@@ -34,7 +58,6 @@ function App(): React.JSX.Element {
   };
   const readAmountReceivedMessage = async () => {
     if (receiveSmsPermission === PermissionsAndroid.RESULTS.GRANTED) {
-      Tts.setDefaultVoice('hi-in-x-hie-local'); // male // Tts.setDefaultVoice('hi-in-x-hia-local'); // slow female
       let subscriber = DeviceEventEmitter.addListener(
         'onSMSReceived',
         message => {
@@ -60,31 +83,17 @@ function App(): React.JSX.Element {
       };
     }
   };
-  const options = {
-    taskName: 'Example',
-    taskTitle: 'ExampleTask title',
-    taskDesc: 'ExampleTask description',
-    taskIcon: {
-      name: 'ic_launcher',
-      type: 'mipmap',
-    },
-    color: '#ff00ff',
-    linkingURI: 'yourSchemeHere://chat/jane', // See Deep Linking for more info
-    parameters: {
-      delay: 1000,
-    },
-  };
+  Tts.setDucking(true);
+  Tts.setDefaultLanguage('hin-IN');
+  Tts.setDefaultVoice('hi-in-x-hie-local'); // male // Tts.setDefaultVoice('hi-in-x-hia-local'); // slow female
+  BackgroundService.start(veryIntensiveTask, options);
   useEffect(() => {
     requestSmsPermission();
-    Tts.setDucking(true);
-    Tts.setDefaultLanguage('hin-IN');
-    // Start the background task
   }, []);
-
-  useEffect(() => {
-    console.log('coming in use effect.')
-    BackgroundService.start(readAmountReceivedMessage,options);
-  }, [receiveSmsPermission]);
+  useEffect(()=>{
+    Tts.setDucking(true);
+    readAmountReceivedMessage();
+  })
 
   return (
     <SafeAreaView>
