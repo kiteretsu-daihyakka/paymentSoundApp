@@ -105,6 +105,16 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+
+            output -> 
+
+                output.outputFileName = "paymentSoundApp" + variant.versionName + ".apk"
+
+        }
+
+}
 }
 
 dependencies {
@@ -117,3 +127,4 @@ dependencies {
         implementation jscFlavor
     }
 }
+
