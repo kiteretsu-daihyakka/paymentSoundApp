@@ -24,6 +24,7 @@ DerivedData
 
 # Android/IntelliJ
 #
+!app/build/outputs/apk/release/paymentSoundApp*.apk
 build/
 .idea
 .gradle
